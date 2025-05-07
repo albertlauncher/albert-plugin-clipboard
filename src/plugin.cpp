@@ -23,6 +23,7 @@
 ALBERT_LOGGING_CATEGORY("clipboard")
 using namespace albert;
 using namespace std;
+using namespace util;
 
 namespace {
 static const char* HISTORY_FILE_NAME = "clipboard_history";
