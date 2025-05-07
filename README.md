@@ -1,0 +1,1 @@
+# albert-plugin-clipboard
