@@ -19,6 +19,7 @@
 #include <albert/matcher.h>
 #include <albert/plugin/snippets.h>
 #include <albert/standarditem.h>
+#include <mutex>
 #include <shared_mutex>
 ALBERT_LOGGING_CATEGORY("clipboard")
 using namespace albert;
