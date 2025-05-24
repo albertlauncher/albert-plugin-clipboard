@@ -22,16 +22,19 @@
 #include <mutex>
 #include <shared_mutex>
 ALBERT_LOGGING_CATEGORY("clipboard")
+using namespace Qt::StringLiterals;
 using namespace albert;
 using namespace std;
 using namespace util;
 
 namespace {
-static const char* HISTORY_FILE_NAME = "clipboard_history";
-static const char* CFG_PERSISTENCE = "persistent";
-static const bool DEF_PERSISTENCE = false;
-static const char* CFG_HISTORY_LENGTH = "history_length";
-static const uint DEF_HISTORY_LENGTH = 100;
+static const auto HISTORY_FILE_NAME  = u"clipboard_history"_s;
+static const auto CFG_PERSISTENCE    = u"persistent"_s;
+static const auto DEF_PERSISTENCE    = false;
+static const auto CFG_HISTORY_LENGTH = u"history_length"_s;
+static const auto DEF_HISTORY_LENGTH = 100u;
+static const auto k_text             = u"text"_s;
+static const auto k_datetime         = u"datetime"_s;
 }
 
 
@@ -57,8 +60,8 @@ Plugin::Plugin():
             for (const auto &value : arr)
             {
                 const auto object = value.toObject();
-                history.emplace_back(object["text"].toString(),
-                                     QDateTime::fromSecsSinceEpoch(object["datetime"].toInt()));
+                history.emplace_back(object[k_text].toString(),
+                                     QDateTime::fromSecsSinceEpoch(object[k_datetime].toInt()));
             }
             file.close();
         }
@@ -81,13 +84,13 @@ Plugin::~Plugin()
         for (const auto &entry : history)
         {
             QJsonObject object;
-            object["text"] = entry.text;
-            object["datetime"] = entry.datetime.toSecsSinceEpoch();
+            object[k_text] = entry.text;
+            object[k_datetime] = entry.datetime.toSecsSinceEpoch();
             array.append(object);
         }
 
         QDir data_dir = dataLocation();
-        if (data_dir.exists() || data_dir.mkpath("."))
+        if (data_dir.exists() || data_dir.mkpath(u"."_s))
         {
             if (QFile file(data_dir.filePath(HISTORY_FILE_NAME));
                 file.open(QIODevice::WriteOnly))
@@ -103,8 +106,6 @@ Plugin::~Plugin()
             WARN << "Failed creating data dir" << data_dir.path();
     }
 }
-
-QString Plugin::defaultTrigger() const { return " "; }
 
 void Plugin::handleTriggerQuery(Query &query)
 {
@@ -128,17 +129,17 @@ void Plugin::handleTriggerQuery(Query &query)
 
             if(havePasteSupport())
                 actions.emplace_back(
-                    "c", tr_cp,
+                    u"c"_s, tr_cp,
                     [t=entry.text](){ setClipboardTextAndPaste(t); }
                 );
 
             actions.emplace_back(
-                "cp", tr_c,
+                u"cp"_s, tr_c,
                 [t=entry.text](){ setClipboardText(t); }
             );
 
             actions.emplace_back(
-                "r", tr_r,
+                u"r"_s, tr_r,
                 [this, t=entry.text]()
                 {
                     lock_guard lock(mutex);
@@ -148,7 +149,7 @@ void Plugin::handleTriggerQuery(Query &query)
 
             if (snippets)
                 actions.emplace_back(
-                    "s", tr("Save as snippet"),
+                    u"s"_s, tr("Save as snippet"),
                     [this, t=entry.text]()
                     {
                         snippets->addSnippet(t);
@@ -157,8 +158,8 @@ void Plugin::handleTriggerQuery(Query &query)
             items.push_back(StandardItem::make(
                     id(),
                     entry.text,
-                    QString("#%1 %2").arg(rank).arg(loc.toString(entry.datetime, QLocale::LongFormat)),
-                    {":clipboard"},
+                    u"#%1 %2"_s.arg(rank).arg(loc.toString(entry.datetime, QLocale::LongFormat)),
+                    {u":clipboard"_s},
                     ::move(actions)
                 )
             );

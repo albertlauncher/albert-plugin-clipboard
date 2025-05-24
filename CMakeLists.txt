@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(clipboard VERSION 4.3)
+project(clipboard VERSION 4.4)
 
 find_package(Albert REQUIRED)
 
