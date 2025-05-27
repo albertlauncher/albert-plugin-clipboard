@@ -13,19 +13,19 @@
 #include <QMessageBox>
 #include <QSettings>
 #include <QSpinBox>
-#include <albert/albert.h>
 #include <albert/extensionregistry.h>
 #include <albert/logging.h>
 #include <albert/matcher.h>
 #include <albert/plugin/snippets.h>
 #include <albert/standarditem.h>
+#include <albert/systemutil.h>
 #include <mutex>
 #include <shared_mutex>
 ALBERT_LOGGING_CATEGORY("clipboard")
 using namespace Qt::StringLiterals;
+using namespace albert::util;
 using namespace albert;
 using namespace std;
-using namespace util;
 
 namespace {
 static const auto HISTORY_FILE_NAME  = u"clipboard_history"_s;
