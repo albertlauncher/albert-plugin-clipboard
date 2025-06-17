@@ -10,7 +10,6 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonValue>
-#include <QMessageBox>
 #include <QSettings>
 #include <QSpinBox>
 #include <albert/extensionregistry.h>

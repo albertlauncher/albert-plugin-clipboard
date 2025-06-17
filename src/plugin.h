@@ -22,7 +22,7 @@ struct ClipboardEntry
 };
 
 
-class Plugin : public albert::ExtensionPlugin,
+class Plugin : public albert::util::ExtensionPlugin,
                public albert::TriggerQueryHandler
 {
     ALBERT_PLUGIN
@@ -47,7 +47,7 @@ private:
     // explicit current, such that users can delete recent ones
     QString clipboard_text;
     
-    albert::WeakDependency<snippets::Plugin> snippets{QStringLiteral("snippets")};
+    albert::util::WeakDependency<snippets::Plugin> snippets{QStringLiteral("snippets")};
 };
 
 
