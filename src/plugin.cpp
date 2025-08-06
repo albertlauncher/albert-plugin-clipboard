@@ -68,11 +68,15 @@ Plugin::Plugin():
             DEBG << "Failed reading from clipboard history.";
     }
 
-
-    // Init clipboard pull timer
-
-    timer.start(500);
+#if defined(Q_OS_MAC)
+    // On macos dataChanged is not reliable. Poll
     connect(&timer, &QTimer::timeout, this, &Plugin::checkClipboard);
+    timer.start(500);
+#elif defined(Q_OS_UNIX)
+    connect(clipboard, &QClipboard::changed, this,
+            [this](QClipboard::Mode mode){ if (mode == QClipboard::Clipboard) checkClipboard(); });
+#endif
+
 }
 
 Plugin::~Plugin()
