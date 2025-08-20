@@ -1,1 +1,1 @@
-# albert-plugin-clipboard
+# Albert plugin: Clipboard
