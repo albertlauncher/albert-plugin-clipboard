@@ -13,6 +13,7 @@
 #include <QSettings>
 #include <QSpinBox>
 #include <albert/extensionregistry.h>
+#include <albert/iconutil.h>
 #include <albert/logging.h>
 #include <albert/matcher.h>
 #include <albert/plugin/snippets.h>
@@ -162,7 +163,7 @@ void Plugin::handleTriggerQuery(Query &query)
                     id(),
                     entry.text,
                     u"#%1 %2"_s.arg(rank).arg(loc.toString(entry.datetime, QLocale::LongFormat)),
-                    {u":clipboard"_s},
+                    [] { return makeImageIcon(u":clipboard"_s); },
                     ::move(actions)
                 )
             );
