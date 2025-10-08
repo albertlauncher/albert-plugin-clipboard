@@ -32,6 +32,8 @@ public:
     Plugin();
     ~Plugin();
 
+    bool supportsFuzzyMatching() const override;
+    void setFuzzyMatching(bool enabled) override;
     void handleTriggerQuery(albert::Query &) override;
     QWidget *buildConfigWidget() override;
 
@@ -43,11 +45,10 @@ private:
     uint length;
     std::list<ClipboardEntry> history;
     bool persistent;
+    bool fuzzy;
     std::shared_mutex mutex;
     // explicit current, such that users can delete recent ones
     QString clipboard_text;
     
     albert::util::WeakDependency<snippets::Plugin> snippets{QStringLiteral("snippets")};
 };
-
-

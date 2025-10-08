@@ -115,7 +115,7 @@ void Plugin::handleTriggerQuery(Query &query)
 {
     QLocale loc;
     int rank = 0;
-    Matcher matcher(query.string());
+    Matcher matcher(query.string(), {.fuzzy=fuzzy});
     vector<shared_ptr<Item>> items;
 
     shared_lock l(mutex);
@@ -226,3 +226,7 @@ void Plugin::checkClipboard()
     if (length < history.size())
         history.resize(length);
 }
+
+bool Plugin::supportsFuzzyMatching() const { return true; }
+
+void Plugin::setFuzzyMatching(bool enabled) { fuzzy = enabled; }
