@@ -7,7 +7,7 @@
 #include <albert/extensionplugin.h>
 #include <albert/plugin/snippets.h>
 #include <albert/plugindependency.h>
-#include <albert/triggerqueryhandler.h>
+#include <albert/generatorqueryhandler.h>
 #include <shared_mutex>
 
 
@@ -22,8 +22,8 @@ struct ClipboardEntry
 };
 
 
-class Plugin : public albert::util::ExtensionPlugin,
-               public albert::TriggerQueryHandler
+class Plugin : public albert::ExtensionPlugin,
+               public albert::GeneratorQueryHandler
 {
     ALBERT_PLUGIN
 
@@ -34,7 +34,7 @@ public:
 
     bool supportsFuzzyMatching() const override;
     void setFuzzyMatching(bool enabled) override;
-    void handleTriggerQuery(albert::Query &) override;
+    albert::ItemGenerator items(albert::QueryContext &) override;
     QWidget *buildConfigWidget() override;
 
 private:
@@ -50,5 +50,5 @@ private:
     // explicit current, such that users can delete recent ones
     QString clipboard_text;
     
-    albert::util::WeakDependency<snippets::Plugin> snippets{QStringLiteral("snippets")};
+    albert::WeakDependency<snippets::Plugin> snippets{QStringLiteral("snippets")};
 };

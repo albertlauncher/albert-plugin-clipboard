@@ -2,6 +2,7 @@
 
 #include "plugin.h"
 #include <QCheckBox>
+#include <QCoroGenerator>
 #include <QDir>
 #include <QFile>
 #include <QFormLayout>
@@ -23,7 +24,6 @@
 #include <shared_mutex>
 ALBERT_LOGGING_CATEGORY("clipboard")
 using namespace Qt::StringLiterals;
-using namespace albert::util;
 using namespace albert;
 using namespace std;
 
@@ -111,11 +111,11 @@ Plugin::~Plugin()
     }
 }
 
-void Plugin::handleTriggerQuery(Query &query)
+ItemGenerator Plugin::items(QueryContext &ctx)
 {
     QLocale loc;
     int rank = 0;
-    Matcher matcher(query.string(), {.fuzzy=fuzzy});
+    Matcher matcher(ctx.query(), {.fuzzy=fuzzy});
     vector<shared_ptr<Item>> items;
 
     shared_lock l(mutex);
@@ -170,7 +170,7 @@ void Plugin::handleTriggerQuery(Query &query)
         }
     }
 
-    query.add(items);
+    co_yield items;
 }
 
 QWidget *Plugin::buildConfigWidget()
