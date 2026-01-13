@@ -33,6 +33,8 @@ static const auto CFG_PERSISTENCE    = u"persistent"_s;
 static const auto DEF_PERSISTENCE    = false;
 static const auto CFG_HISTORY_LENGTH = u"history_length"_s;
 static const auto DEF_HISTORY_LENGTH = 100u;
+static const auto CFG_MAX_ENTRY_BYTES = u"max_entry_bytes"_s;
+static const auto DEF_MAX_ENTRY_BYTES = 0u;
 static const auto k_text             = u"text"_s;
 static const auto k_datetime         = u"datetime"_s;
 }
@@ -46,7 +48,7 @@ Plugin::Plugin():
     auto s = settings();
     persistent = s->value(CFG_PERSISTENCE, DEF_PERSISTENCE).toBool();
     length = s->value(CFG_HISTORY_LENGTH, DEF_HISTORY_LENGTH).toUInt();
-
+    max_entry_bytes = s->value(CFG_MAX_ENTRY_BYTES, DEF_MAX_ENTRY_BYTES).toUInt();
 
     // Load history, if configured
 
@@ -199,18 +201,42 @@ QWidget *Plugin::buildConfigWidget()
                     history.resize(length);
             });
 
+    auto *m = new QSpinBox;
+    m->setMinimum(0);
+    m->setMaximum(1024 * 1024);
+    m->setValue(max_entry_bytes / 1024);
+    m->setSuffix(tr(" KiB"));
+    m->setToolTip(tr("Maximum clipboard text entry size. 0 = unlimited."));
+    l->addRow(tr("Max entry size"), m);
+
+    connect(m, &QSpinBox::valueChanged, this, [this](int value)
+            {
+                max_entry_bytes = static_cast<uint>(value) * 1024;
+                settings()->setValue(CFG_MAX_ENTRY_BYTES, max_entry_bytes);
+            });
+
     w->setLayout(l);
     return w;
 }
 
+
 void Plugin::checkClipboard()
 {
     // skip empty text (images, pixmaps etc), spaces only or no change
-    if (auto text = clipboard->text();
-        text.trimmed().isEmpty() || text == clipboard_text )
+    const auto text = clipboard->text();
+    if (text.trimmed().isEmpty() || text == clipboard_text)
         return;
-    else
-        clipboard_text = text;
+
+    const auto byte_size = text.toUtf8().size();
+    if (max_entry_bytes && byte_size > static_cast<qsizetype>(max_entry_bytes))
+    {
+        DEBG << "Skipping clipboard entry:" << byte_size << ">" << max_entry_bytes << "bytes";
+        return;
+    }
+
+
+
+    clipboard_text = text;
 
     lock_guard lock(mutex);
 
@@ -230,3 +256,4 @@ void Plugin::checkClipboard()
 bool Plugin::supportsFuzzyMatching() const { return true; }
 
 void Plugin::setFuzzyMatching(bool enabled) { fuzzy = enabled; }
+
