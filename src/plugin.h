@@ -43,6 +43,7 @@ private:
     QTimer timer;
     QClipboard * const clipboard;
     uint length;
+    uint max_entry_bytes;
     std::list<ClipboardEntry> history;
     bool persistent;
     bool fuzzy;
@@ -52,3 +53,4 @@ private:
     
     albert::WeakDependency<snippets::Plugin> snippets{QStringLiteral("snippets")};
 };
+
