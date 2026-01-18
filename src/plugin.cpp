@@ -13,7 +13,6 @@
 #include <QJsonValue>
 #include <QSettings>
 #include <QSpinBox>
-#include <albert/extensionregistry.h>
 #include <albert/iconutil.h>
 #include <albert/logging.h>
 #include <albert/matcher.h>
