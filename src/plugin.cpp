@@ -13,7 +13,7 @@
 #include <QJsonValue>
 #include <QSettings>
 #include <QSpinBox>
-#include <albert/iconutil.h>
+#include <albert/icon.h>
 #include <albert/logging.h>
 #include <albert/matcher.h>
 #include <albert/plugin/snippets.h>
@@ -162,7 +162,7 @@ ItemGenerator Plugin::items(QueryContext &ctx)
                     id(),
                     entry.text,
                     u"#%1 %2"_s.arg(rank).arg(loc.toString(entry.datetime, QLocale::LongFormat)),
-                    [] { return makeImageIcon(u":clipboard"_s); },
+                    [] { return Icon::image(u":clipboard"_s); },
                     ::move(actions)
                 )
             );
