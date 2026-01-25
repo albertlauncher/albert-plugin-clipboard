@@ -37,14 +37,20 @@ public:
     albert::ItemGenerator items(albert::QueryContext &) override;
     QWidget *buildConfigWidget() override;
 
+    uint historyLimit() const;
+    void setHistoryLimit(uint);
+
+    bool storeHistory() const;
+    void setStoreHistory(bool);
+
 private:
     void checkClipboard();
 
     QTimer timer;
     QClipboard * const clipboard;
-    uint length;
+    uint history_limit_;
     std::list<ClipboardEntry> history;
-    bool persistent;
+    bool store_history_;
     bool fuzzy;
     std::shared_mutex mutex;
     // explicit current, such that users can delete recent ones

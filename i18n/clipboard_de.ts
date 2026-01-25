@@ -20,16 +20,12 @@
         <translation>Als Schnipsel speichern</translation>
     </message>
     <message>
-        <source>Stores the history on disk so that it persists across restarts.</source>
-        <translation>Speichert den Verlauf auf der Festplatte, damit er über Neustarts hinweg bestehen bleibt.</translation>
+        <source>History limit</source>
+        <translation>Maximale Verlaufsgröße</translation>
     </message>
     <message>
         <source>Store history</source>
         <translation>Verlauf speichern</translation>
-    </message>
-    <message>
-        <source>History length</source>
-        <translation>Länge des Verlaufs</translation>
     </message>
 </context>
 </TS>

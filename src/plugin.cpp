@@ -19,6 +19,7 @@
 #include <albert/plugin/snippets.h>
 #include <albert/standarditem.h>
 #include <albert/systemutil.h>
+#include <albert/widgetsutil.h>
 #include <mutex>
 #include <shared_mutex>
 ALBERT_LOGGING_CATEGORY("clipboard")
@@ -28,8 +29,8 @@ using namespace std;
 
 namespace {
 static const auto HISTORY_FILE_NAME  = u"clipboard_history"_s;
-static const auto CFG_PERSISTENCE    = u"persistent"_s;
-static const auto DEF_PERSISTENCE    = false;
+static const auto CFG_STORE_HISTORY  = u"persistent"_s;
+static const auto DEF_STORE_HISTORY  = false;
 static const auto CFG_HISTORY_LENGTH = u"history_length"_s;
 static const auto DEF_HISTORY_LENGTH = 100u;
 static const auto k_text             = u"text"_s;
@@ -40,16 +41,11 @@ static const auto k_datetime         = u"datetime"_s;
 Plugin::Plugin():
     clipboard(QGuiApplication::clipboard())
 {
-    // Load settings
-
     auto s = settings();
-    persistent = s->value(CFG_PERSISTENCE, DEF_PERSISTENCE).toBool();
-    length = s->value(CFG_HISTORY_LENGTH, DEF_HISTORY_LENGTH).toUInt();
+    store_history_ = s->value(CFG_STORE_HISTORY, DEF_STORE_HISTORY).toBool();
+    history_limit_ = s->value(CFG_HISTORY_LENGTH, DEF_HISTORY_LENGTH).toUInt();
 
-
-    // Load history, if configured
-
-    if (persistent)
+    if (store_history_)
     {
         if (QFile file(QDir(dataLocation()).filePath(HISTORY_FILE_NAME));
             file.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -81,7 +77,7 @@ Plugin::Plugin():
 
 Plugin::~Plugin()
 {
-    if (persistent)
+    if (store_history_)
     {
         QJsonArray array;
         for (const auto &entry : history)
@@ -177,29 +173,46 @@ QWidget *Plugin::buildConfigWidget()
     auto *w = new QWidget;
     auto *l = new QFormLayout;
 
-    auto *c = new QCheckBox();
-    c->setChecked(persistent);
-    c->setToolTip(tr("Stores the history on disk so that it persists across restarts."));
-    l->addRow(tr("Store history"), c);
-    connect(c, &QCheckBox::toggled, this, [this](bool checked)
-            { settings()->setValue(CFG_PERSISTENCE, persistent = checked); });
+    auto *cb = new QCheckBox();
+    cb->setChecked(store_history_);
+    l->addRow(tr("Store history"), cb);
+    bindWidget(cb, this, &Plugin::storeHistory, &Plugin::setStoreHistory);
 
     auto *s = new QSpinBox;
     s->setMinimum(1);
-    s->setMaximum(10000000);
-    s->setValue(length);
-    l->addRow(tr("History length"), s);
-    connect(s, &QSpinBox::valueChanged, this, [this](int value)
-            {
-                settings()->setValue(CFG_HISTORY_LENGTH, length = value);
-
-                lock_guard lock(mutex);
-                if (length < history.size())
-                    history.resize(length);
-            });
+    s->setMaximum(10'000'000);
+    s->setValue(history_limit_);
+    l->addRow(tr("History limit"), s);
+    bindWidget(s, this, &Plugin::historyLimit, &Plugin::setHistoryLimit);
 
     w->setLayout(l);
     return w;
+}
+
+uint Plugin::historyLimit() const { return history_limit_; }
+
+void Plugin::setHistoryLimit(uint v)
+{
+    if (v != history_limit_)
+    {
+        history_limit_ = v;
+        settings()->setValue(CFG_HISTORY_LENGTH, v);
+
+        lock_guard lock(mutex);
+        if (history_limit_ < history.size())
+            history.resize(history_limit_);
+    }
+}
+
+bool Plugin::storeHistory() const { return store_history_; }
+
+void Plugin::setStoreHistory(bool v)
+{
+    if (v != store_history_)
+    {
+        store_history_ = v;
+        settings()->setValue(CFG_STORE_HISTORY, v);
+    }
 }
 
 void Plugin::checkClipboard()
@@ -222,8 +235,8 @@ void Plugin::checkClipboard()
     history.emplace_front(clipboard_text, QDateTime::currentDateTime());
 
     // adjust lenght
-    if (length < history.size())
-        history.resize(length);
+    if (history_limit_ < history.size())
+        history.resize(history_limit_);
 }
 
 bool Plugin::supportsFuzzyMatching() const { return true; }

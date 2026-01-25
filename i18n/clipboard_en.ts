@@ -20,15 +20,11 @@
         <translation></translation>
     </message>
     <message>
-        <source>Stores the history on disk so that it persists across restarts.</source>
+        <source>History limit</source>
         <translation></translation>
     </message>
     <message>
         <source>Store history</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>History length</source>
         <translation></translation>
     </message>
 </context>
