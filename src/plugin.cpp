@@ -108,60 +108,62 @@ Plugin::~Plugin()
 
 ItemGenerator Plugin::items(QueryContext &ctx)
 {
-    QLocale loc;
-    int rank = 0;
-    Matcher matcher(ctx.query(), {.fuzzy=fuzzy});
     vector<shared_ptr<Item>> items;
 
-    shared_lock l(mutex);
-
-    for (const auto &entry : history)
     {
-        ++rank;
-        if (matcher.match(entry.text))
+        QLocale loc;
+        int rank = 0;
+        Matcher matcher(ctx.query(), {.fuzzy=fuzzy});
+        shared_lock l(mutex);
+
+        for (const auto &entry : history)
         {
-            static const auto tr_cp = tr("Copy and paste");
-            static const auto tr_c = tr("Copy");
-            static const auto tr_r = tr("Remove");
+            ++rank;
+            if (matcher.match(entry.text))
+            {
+                static const auto tr_cp = tr("Copy and paste");
+                static const auto tr_c = tr("Copy");
+                static const auto tr_r = tr("Remove");
 
-            vector<Action> actions;
+                vector<Action> actions;
 
-            if(havePasteSupport())
+                if(havePasteSupport())
+                    actions.emplace_back(
+                        u"c"_s, tr_cp,
+                        [t=entry.text](){ setClipboardTextAndPaste(t); }
+                    );
+
                 actions.emplace_back(
-                    u"c"_s, tr_cp,
-                    [t=entry.text](){ setClipboardTextAndPaste(t); }
+                    u"cp"_s, tr_c,
+                    [t=entry.text](){ setClipboardText(t); }
                 );
 
-            actions.emplace_back(
-                u"cp"_s, tr_c,
-                [t=entry.text](){ setClipboardText(t); }
-            );
-
-            actions.emplace_back(
-                u"r"_s, tr_r,
-                [this, t=entry.text]()
-                {
-                    lock_guard lock(mutex);
-                    this->history.remove_if([t](const auto& ce){ return ce.text == t; });
-                }
-            );
-
-            if (snippets)
                 actions.emplace_back(
-                    u"s"_s, tr("Save as snippet"),
+                    u"r"_s, tr_r,
                     [this, t=entry.text]()
                     {
-                        snippets->addSnippet(t);
-                    });
+                        lock_guard lock(mutex);
+                        this->history.remove_if([t](const auto& ce){ return ce.text == t; });
+                    }
+                );
 
-            items.push_back(StandardItem::make(
-                    id(),
-                    entry.text,
-                    u"#%1 %2"_s.arg(rank).arg(loc.toString(entry.datetime, QLocale::LongFormat)),
-                    [] { return Icon::image(u":clipboard"_s); },
-                    ::move(actions)
-                )
-            );
+                if (snippets)
+                    actions.emplace_back(
+                        u"s"_s, tr("Save as snippet"),
+                        [this, t=entry.text]()
+                        {
+                            snippets->addSnippet(t);
+                        });
+
+                items.push_back(StandardItem::make(
+                        id(),
+                        entry.text,
+                        u"#%1 %2"_s.arg(rank).arg(loc.toString(entry.datetime, QLocale::LongFormat)),
+                        [] { return Icon::image(u":clipboard"_s); },
+                        ::move(actions)
+                    )
+                );
+            }
         }
     }
 
