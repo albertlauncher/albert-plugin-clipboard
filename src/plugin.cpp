@@ -159,7 +159,7 @@ ItemGenerator Plugin::items(QueryContext &ctx)
                         id(),
                         entry.text,
                         u"#%1 %2"_s.arg(rank).arg(loc.toString(entry.datetime, QLocale::LongFormat)),
-                        [] { return Icon::image(u":clipboard"_s); },
+                        [] { return Icon::grapheme(u"📋"_s); },
                         ::move(actions)
                     )
                 );
