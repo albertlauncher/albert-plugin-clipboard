@@ -106,7 +106,7 @@ Plugin::~Plugin()
     }
 }
 
-ItemGenerator Plugin::items(QueryContext &ctx)
+ItemGenerator Plugin::items(QueryContext ctx)
 {
     vector<shared_ptr<Item>> items;
 
@@ -243,4 +243,4 @@ void Plugin::checkClipboard()
 
 bool Plugin::supportsFuzzyMatching() const { return true; }
 
-void Plugin::setFuzzyMatching(bool enabled) { fuzzy = enabled; }
+void Plugin::onFuzzyMatchingChanged(bool enabled) { fuzzy = enabled; }

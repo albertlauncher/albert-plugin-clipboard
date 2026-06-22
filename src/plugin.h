@@ -33,8 +33,8 @@ public:
     ~Plugin();
 
     bool supportsFuzzyMatching() const override;
-    void setFuzzyMatching(bool enabled) override;
-    albert::ItemGenerator items(albert::QueryContext &) override;
+    void onFuzzyMatchingChanged(bool enabled) override;
+    albert::ItemGenerator items(albert::QueryContext) override;
     QWidget *buildConfigWidget() override;
 
     uint historyLimit() const;
