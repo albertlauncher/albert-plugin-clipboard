@@ -28,13 +28,15 @@ using namespace albert;
 using namespace std;
 
 namespace {
-static const auto HISTORY_FILE_NAME  = u"clipboard_history"_s;
-static const auto CFG_STORE_HISTORY  = u"persistent"_s;
-static const auto DEF_STORE_HISTORY  = false;
-static const auto CFG_HISTORY_LENGTH = u"history_length"_s;
-static const auto DEF_HISTORY_LENGTH = 100u;
-static const auto k_text             = u"text"_s;
-static const auto k_datetime         = u"datetime"_s;
+static const auto HISTORY_FILE_NAME   = u"clipboard_history"_s;
+static const auto CFG_STORE_HISTORY   = u"persistent"_s;
+static const auto DEF_STORE_HISTORY   = false;
+static const auto CFG_HISTORY_LENGTH  = u"history_length"_s;
+static const auto DEF_HISTORY_LENGTH  = 100u;
+static const auto CFG_MAX_ENTRY_BYTES = u"max_entry_bytes"_s;
+static const auto DEF_MAX_ENTRY_BYTES = 0u;
+static const auto k_text              = u"text"_s;
+static const auto k_datetime          = u"datetime"_s;
 }
 
 
@@ -44,6 +46,7 @@ Plugin::Plugin():
     auto s = settings();
     store_history_ = s->value(CFG_STORE_HISTORY, DEF_STORE_HISTORY).toBool();
     history_limit_ = s->value(CFG_HISTORY_LENGTH, DEF_HISTORY_LENGTH).toUInt();
+    max_entry_bytes_ = s->value(CFG_MAX_ENTRY_BYTES, DEF_MAX_ENTRY_BYTES).toUInt();
 
     if (store_history_)
     {
@@ -187,6 +190,16 @@ QWidget *Plugin::buildConfigWidget()
     l->addRow(tr("History limit"), s);
     bindWidget(s, this, &Plugin::historyLimit, &Plugin::setHistoryLimit);
 
+    auto *m = new QSpinBox;
+    m->setMinimum(0);
+    m->setMaximum(1024 * 1024);
+    m->setValue(max_entry_bytes_ / 1024);
+    m->setSpecialValueText(u"∞"_s);
+    m->setSuffix(u"KiB"_s);
+    m->setToolTip(tr("Maximum clipboard text entry size."));
+    l->addRow(tr("Max entry size"), m);
+    bindWidget(m, this, &Plugin::maxEntrySizeKiB, &Plugin::setMaxEntrySizeKiB);
+
     w->setLayout(l);
     return w;
 }
@@ -217,6 +230,18 @@ void Plugin::setStoreHistory(bool v)
     }
 }
 
+uint Plugin::maxEntrySizeKiB() const { return max_entry_bytes_ / 1024; }
+
+void Plugin::setMaxEntrySizeKiB(uint v)
+{
+    const auto bytes = v * 1024u;
+    if (bytes != max_entry_bytes_)
+    {
+        max_entry_bytes_ = bytes;
+        settings()->setValue(CFG_MAX_ENTRY_BYTES, max_entry_bytes_);
+    }
+}
+
 void Plugin::checkClipboard()
 {
     // skip empty text (images, pixmaps etc), spaces only or no change
@@ -225,6 +250,13 @@ void Plugin::checkClipboard()
         return;
     else
         clipboard_text = text;
+
+    const auto byte_size = clipboard_text.toUtf8().size();
+    if (max_entry_bytes_ && byte_size > static_cast<qsizetype>(max_entry_bytes_))
+    {
+        DEBG << "Skipping clipboard entry:" << byte_size << ">" << max_entry_bytes_ << "bytes";
+        return;
+    }
 
     lock_guard lock(mutex);
 

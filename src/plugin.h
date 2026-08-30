@@ -43,12 +43,16 @@ public:
     bool storeHistory() const;
     void setStoreHistory(bool);
 
+    uint maxEntrySizeKiB() const;
+    void setMaxEntrySizeKiB(uint);
+
 private:
     void checkClipboard();
 
     QTimer timer;
     QClipboard * const clipboard;
     uint history_limit_;
+    uint max_entry_bytes_;
     std::list<ClipboardEntry> history;
     bool store_history_;
     bool fuzzy;
